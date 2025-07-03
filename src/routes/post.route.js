@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createPost, deletePost, getPost, getPosts, getUserPost, likePost } from "../controllers/post.controller.js";
+import { createPost, deletePost, getPost, getPosts, getUserPost, likePost, updatePost } from "../controllers/post.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import upload from "../middleware/upload.middleware.js";
 
@@ -12,6 +12,7 @@ postRouter.get("/user/:userId", getUserPost)
 
 //private route
 postRouter.post("/", protectRoute, upload.single("image"), createPost);
+postRouter.put("/:postId", protectRoute, upload.single("image"), updatePost);
 postRouter.post("/:postId/like", protectRoute, likePost);
 postRouter.delete("/:postId", protectRoute, deletePost);
 export default postRouter;

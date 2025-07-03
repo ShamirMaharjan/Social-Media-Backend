@@ -177,6 +177,97 @@ export const createPost = async (req, res) => {
         })
     }
 }
+
+export const updatePost = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { content } = req.body;
+        const imageFile = req.file;
+        const { postId } = req.params;
+
+        if (!content && !imageFile) {
+            return res.status(400).json({
+                success: false,
+                message: "Post must contain either content or image",
+            })
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            })
+        }
+
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found",
+            })
+        }
+
+        if (post.user.toString() !== user._id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to update this post",
+            })
+        }
+
+
+        let imageUrl = "";
+
+        //upload image to cloudinary if provided
+        if (imageFile) {
+            try {
+                //convert buffer to base64 for cloudinary
+                const base64Image = `data:${imageFile.mimetype};base64,${imageFile.buffer.toString("base64")}`;
+
+                const uploadResponse = await cloudinary.uploader.upload(base64Image, {
+                    folder: "social_media_posts",
+                    resource_type: "image",
+                    transformation: [
+                        { width: 800, height: 600, crop: "limit" },
+                        { quality: "auto" },
+                        { format: "auto" },
+                    ],
+                });
+
+                imageUrl = uploadResponse.secure_url;
+
+            } catch (error) {
+                console.log("Cloudinary upload error:", error);
+                return res.status(400).json({
+                    success: false,
+                    message: "Failed to upload image to Cloudinary",
+                })
+            }
+
+        }
+
+        const updatedPost = await Post.findByIdAndUpdate(
+            postId,
+            {
+                content: content || "",
+                image: imageUrl || post.image,
+            },
+            { new: true }
+        );
+
+        res.status(201).json({
+            success: true,
+            message: "Post updated successfully",
+            data: updatedPost,
+        })
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to update post",
+        })
+    }
+}
 export const likePost = async (req, res) => {
     try {
         const { postId } = req.params;
