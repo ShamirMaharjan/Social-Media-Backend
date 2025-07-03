@@ -6,7 +6,7 @@ export const getUserProfile = async (req, res) => {
     try {
         const { username } = req.params;
 
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ name: username });
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -64,7 +64,7 @@ export const getCurrentUser = async (req, res) => {
 }
 
 export const followUser = async (req, res) => {
-    const { userId } = req.user.id;
+    const userId = req.user.id;
     const { targetUserId } = req.params;
 
     if (userId === targetUserId) return res.status(400).json({ error: "You cannot follow yourself" });
@@ -104,7 +104,7 @@ export const followUser = async (req, res) => {
         });
     }
 
-    res.satus(200).json({
+    res.status(200).json({
         success: true,
         message: isFollowing ? "User Unfollowed successfully" : "User Followed successfully",
     })

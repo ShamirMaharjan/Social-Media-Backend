@@ -4,9 +4,10 @@ import { protectRoute } from "../middleware/auth.middleware.js";
 
 const userRouter = Router();
 
-
+//public route
 userRouter.get("/profile/:username", getUserProfile);
 
+//protected route
 userRouter.get("/me", protectRoute, getCurrentUser);
 userRouter.put("/profile", protectRoute, updateUserProfile);
 userRouter.post("/follow/:targetUserId", protectRoute, followUser);
