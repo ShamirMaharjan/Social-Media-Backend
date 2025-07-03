@@ -55,13 +55,22 @@ export const createComment = async (req, res) => {
         });
 
         if (post.user.toString() !== user._id.toString()) {
-            await Notification.create({
+            const notification = await Notification.create({
                 from: user._id,
                 to: post.user,
                 type: "comment",
                 post: postId,
                 comment: comment._id,
             });
+            // Emit WebSocket event for notification
+            try {
+                const io = req.app.get('socketio');
+                if (io) {
+                    io.to(post.user.toString()).emit('notificationReceived', notification);
+                }
+            } catch (error) {
+                console.error('Failed to emit notification:', error);
+            }
         }
 
         res.status(201).json({
@@ -70,6 +79,17 @@ export const createComment = async (req, res) => {
                 comment
             }
         })
+
+        try {
+            const io = req.app.get('socketio');
+            // Emit WebSocket event after successful creation
+            if (io) {
+                io.emit('commentAdded', comment);
+            }
+        } catch (error) {
+            console.error('Failed to emit notification:', error);
+        }
+
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
