@@ -7,6 +7,7 @@ import authRouter from './routes/auth.route.js';
 import userRouter from './routes/user.route.js';
 import postRouter from './routes/post.route.js';
 import commentRouter from './routes/comment.route.js';
+import notificationRouter from './routes/notification.route.js';
 
 
 const app = express();
@@ -24,6 +25,8 @@ app.use("/api/user", userRouter);
 app.use("/api/posts", postRouter);
 
 app.use("/api/comments", commentRouter);
+
+app.use("/api/notifications", notificationRouter);
 
 app.get("/", (req, res) => {
     res.send("Welcome to my social media");
