@@ -6,7 +6,7 @@ export const getUserProfile = async (req, res) => {
     try {
         const { username } = req.params;
 
-        const user = await User.findOne({ name: username });
+        const user = await User.find({ name: username });
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -20,11 +20,17 @@ export const getUserProfile = async (req, res) => {
 
     } catch (error) {
         console.log(error);
+        res.status(500).json(error);
     }
 }
 
 export const updateUserProfile = async (req, res) => {
     try {
+        const { name, email, password } = req.body;
+
+        if (name && name.trim() === "") return res.status(400).json({ error: "Name cannot be empty" });
+        if (email && email.trim() === "") return res.status(400).json({ error: "Email cannot be empty" });
+        if (password && password.trim() === "") return res.status(400).json({ error: "Password cannot be empty" });
 
         const user = await User.findOneAndUpdate({ _id: req.user.id }, req.body, { new: true });
 
@@ -97,15 +103,45 @@ export const followUser = async (req, res) => {
         });
 
         //after following, send notification to target user
-        await Notification.create({
+        const notification = await Notification.create({
             from: currentUser._id,
             to: targetUserId,
             type: "follow",
         });
+
+        try {
+            const io = req.app.get('socketio');
+            if (io) {
+                io.to(targetUser._id.toString()).emit('followNotification', notification);
+            }
+        } catch (error) {
+            console.error('Failed to emit notification:', error);
+        }
     }
 
     res.status(200).json({
         success: true,
         message: isFollowing ? "User Unfollowed successfully" : "User Followed successfully",
     })
+}
+
+export const deleteUser = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const user = await User.findById(userId);
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        await User.findByIdAndDelete(userId);
+
+        res.status(200).json({
+            success: true,
+            message: "User deleted successfully",
+        })
+
+    } catch (error) {
+        console.log(error);
+        req.status(500).json(error);
+    }
 }

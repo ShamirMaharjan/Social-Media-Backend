@@ -126,3 +126,55 @@ export const deleteComment = async (req, res) => {
         res.status(500).json({ message: error.message })
     }
 }
+
+export const likeComment = async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        const userId = req.user.id;
+
+        const comment = await Post.findById(commentId);
+        const user = await User.findById(userId);
+
+        if (!comment || !user) {
+            return res.status(404).json({
+                success: false,
+                message: "Comment or user not found",
+            })
+        }
+
+        const isLiked = comment.likes.includes(userId);
+
+        if (isLiked) {
+            //if user has already liked the comment, remove the like
+            await Comment.findByIdAndUpdate(commentId, {
+                $pull: { likes: userId },
+            });
+        } else {
+            //if user has not liked the comment, add the like
+            await Post.findByIdAndUpdate(commentId, {
+                $push: { likes: userId },
+            });
+
+            //if the comment is not ours send notification tot the user of ther post
+            // if (comment.user.toString() !== user._id.toString()) {
+            //     await Notification.create({
+            //         from: userId,
+            //         to: comment.user,
+            //         type: "like",
+            //         comment: commentId,
+            //     });
+            // }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: isLiked ? "Comment unliked sucessfully" : "Comment liked successfully",
+        })
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to like Comment",
+        })
+    }
+}

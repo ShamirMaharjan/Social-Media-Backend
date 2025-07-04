@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
-import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+
+import User from "../models/user.model.js";
 import { JWT_EXPIRES_IN, JWT_SECRET } from "../config/env.js";
-export const signUp = async (req, res, next) => {
+
+export const signUp = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -45,11 +47,15 @@ export const signUp = async (req, res, next) => {
     } catch (error) {
         session.abortTransaction();
         session.endSession();
-        next(error);
+        res.status(500).json({
+            success: false,
+            message: "Something went wrong",
+            error: error.message
+        });
     }
 };
 
-export const signIn = async (req, res, next) => {
+export const signIn = async (req, res) => {
     const { email, password } = req.body;
 
     try {
@@ -85,9 +91,26 @@ export const signIn = async (req, res, next) => {
 
 
     } catch (error) {
-        next(error);
+        res.status(500).json({
+            success: false,
+            message: "Something went wrong",
+            error: error.message
+        });
     }
 
 };
 
-export const signOut = async (req, res, next) => { };
+export const signOut = async (req, res) => {
+    try {
+        res.status(200).json({
+            success: true,
+            message: "User signed out successfully"
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Something went wrong",
+            error: error.message
+        });
+    }
+};

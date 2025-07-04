@@ -12,6 +12,7 @@ export const getPosts = async (req, res) => {
             .populate("user", "name email profilePicture")
             .populate({
                 path: "comments",
+                select: "content",
                 populate: {
                     path: "user",
                     select: "name email profilePicture",
@@ -25,6 +26,10 @@ export const getPosts = async (req, res) => {
         })
     } catch (error) {
         console.log(error);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        })
     }
 }
 
@@ -110,7 +115,7 @@ export const getUserPost = async (req, res) => {
 export const createPost = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { content } = req.body;
+        const content = req.body.content;
         const imageFile = req.file;
 
         if (!content && !imageFile) {
@@ -181,7 +186,7 @@ export const createPost = async (req, res) => {
 export const updatePost = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { content } = req.body;
+        const content = req.body.content;
         const imageFile = req.file;
         const { postId } = req.params;
 
@@ -268,6 +273,7 @@ export const updatePost = async (req, res) => {
         })
     }
 }
+
 export const likePost = async (req, res) => {
     try {
         const { postId } = req.params;
